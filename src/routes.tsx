@@ -6,6 +6,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Loading from "./components/common/Loading";
 import { lazyWithPreload, LazyComponent } from "./utils/lazyLoad";
 
@@ -48,9 +49,10 @@ const RouteComponent: React.FC<{
   component: LazyComponent<React.ComponentType<any>>;
   props?: Record<string, any>;
   hasChildren?: boolean;
-}> = ({ component: Component, props, hasChildren }) => (
-  <Component {...props}>{hasChildren && <Outlet />}</Component>
-);
+}> = ({ component: Component, props, hasChildren }) => {
+  const content = <Component {...props}>{hasChildren && <Outlet />}</Component>;
+  return props?.wrapper ? props.wrapper(content) : content;
+};
 
 // Preload handler
 const PreloadLink: React.FC<{ to: string; children: React.ReactNode }> = ({
@@ -92,6 +94,11 @@ const routes: RouteConfig[] = [
   {
     path: "/profile",
     component: ProfilePage,
+    props: {
+      wrapper: (children: React.ReactNode) => (
+        <ProtectedRoute>{children}</ProtectedRoute>
+      ),
+    },
   },
   {
     path: "/auth",

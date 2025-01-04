@@ -1,8 +1,17 @@
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon } from "lucide-react";
 
-export type CardType = 'default' | 'compact' | 'detailed' | 'graph' | 'table' | 'stat' | 'progress';
+export type CardType =
+  | "default"
+  | "compact"
+  | "detailed"
+  | "graph"
+  | "table"
+  | "stat"
+  | "progress";
 
-export type LayoutType = 'grid' | 'freeform';
+export type LayoutType = "grid" | "freeform";
+
+export type SortBy = "title" | "value";
 
 export interface TableRow {
   label: string;
@@ -27,6 +36,7 @@ export interface DashboardConfig {
   widgets: Widget[];
   layout: Layout;
   apiConnections: APIConnection[];
+}
 
 export interface Widget {
   id: string;

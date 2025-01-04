@@ -1,6 +1,6 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,8 +13,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <div>Loading...</div>;
   }
 
-  if (!user || user.user_metadata?.role !== 'admin') {
-    return <Navigate to="/" replace />;
+  if (!user) {
+    return <Navigate to="/auth/login" replace />;
   }
 
   return <>{children}</>;

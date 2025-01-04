@@ -5,8 +5,8 @@
 
 [build.environment]
   NODE_VERSION = "18"
-  SUPABASE_URL = ""
-  VITE_APP_SUPABASE_URL = ""
+  SUPABASE_URL = "https://modern-dashboard.supabase.co"
+  VITE_APP_SUPABASE_URL = "https://modern-dashboard.supabase.co"
   GCLOUD_PROJECT_ID = ""
   GCLOUD_BUCKET = "modern-dashboard-metrics"
   ENABLE_MONITORING = "true"
@@ -23,29 +23,6 @@
 
 [[plugins]]
   package = "@netlify/plugin-lighthouse"
-
-[[plugins]]
-  package = "./netlify/plugins/developer-reports"
-  [plugins.inputs]
-    SLACK_WEBHOOK_URL = ""
-    GITHUB_TOKEN = ""
-    GITHUB_REPO = ""
-
-[[edge_functions]]
-  function = "auth-edge"
-  path = "/auth/*"
-
-[[edge_functions]]
-  function = "component-health"
-  path = "/api/monitoring/component-health"
-
-[[edge_functions]]
-  function = "runtime-stability"
-  path = "/api/monitoring/runtime-stability"
-
-[[edge_functions]]
-  function = "integration-validator"
-  path = "/api/monitoring/integration-validator"
 
 [functions]
   external_node_modules = ["@supabase/supabase-js", "@google-cloud/storage"]
