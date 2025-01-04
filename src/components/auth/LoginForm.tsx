@@ -1,3 +1,15 @@
+/**
+ * LoginForm Component
+ *
+ * A comprehensive login form that provides both email/password and Google authentication.
+ * Features include:
+ * - Email/password authentication
+ * - Google Sign-In integration
+ * - Remember me functionality
+ * - Loading states
+ * - Error handling
+ * - Forgot password option
+ */
 import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { TextInput } from "../shared/form/TextInput";
