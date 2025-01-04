@@ -1,72 +1,143 @@
-import { lazy, Suspense } from "react";
-import { createBrowserRouter, Outlet } from "react-router-dom";
+import { Suspense, startTransition } from "react";
+import {
+  createBrowserRouter,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
+import Loading from "./components/common/Loading";
+import { lazyWithPreload, LazyComponent } from "./utils/lazyLoad";
 
-// Lazy load components
-const Dashboard = lazy(() => import("./components/Dashboard"));
-const ProfilePage = lazy(() => import("./components/profile/ProfilePage"));
-const AuthLayout = lazy(() => import("./components/auth/AuthLayout"));
-const LoginForm = lazy(() => import("./components/auth/LoginForm"));
-const RegistrationForm = lazy(
+// Types
+interface AuthLayoutProps {
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+}
+
+// Lazy load components with preload
+const Dashboard = lazyWithPreload(() => import("./components/Dashboard"));
+const ProfilePage = lazyWithPreload(
+  () => import("./components/profile/ProfilePage")
+);
+const AuthLayout = lazyWithPreload<React.ComponentType<AuthLayoutProps>>(
+  () => import("./components/auth/AuthLayout")
+);
+const LoginForm = lazyWithPreload(() => import("./components/auth/LoginForm"));
+const RegistrationForm = lazyWithPreload(
   () => import("./components/auth/RegistrationForm")
 );
 
-// Loading component
-const Loading = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="w-12 h-12 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
-  </div>
+// Types for route configuration
+interface RouteConfig {
+  path: string;
+  component: LazyComponent<React.ComponentType<any>>;
+  props?: Record<string, any>;
+  children?: RouteChildConfig[];
+}
+
+interface RouteChildConfig {
+  path: string;
+  component: LazyComponent<React.ComponentType<any>>;
+  props?: Record<string, any>;
+}
+
+// Route wrapper component to handle children
+const RouteComponent: React.FC<{
+  component: LazyComponent<React.ComponentType<any>>;
+  props?: Record<string, any>;
+  hasChildren?: boolean;
+}> = ({ component: Component, props, hasChildren }) => (
+  <Component {...props}>{hasChildren && <Outlet />}</Component>
 );
 
-export const router = createBrowserRouter([
+// Preload handler
+const PreloadLink: React.FC<{ to: string; children: React.ReactNode }> = ({
+  to,
+  children,
+}) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleMouseEnter = () => {
+    const route = routes.find((r) => r.path === to);
+    if (route?.component?.preload) {
+      startTransition(() => {
+        route.component.preload();
+      });
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname !== to) {
+      navigate(to);
+    }
+  };
+
+  return (
+    <a href={to} onMouseEnter={handleMouseEnter} onClick={handleClick}>
+      {children}
+    </a>
+  );
+};
+
+// Route configuration
+const routes: RouteConfig[] = [
   {
     path: "/",
-    element: (
-      <Suspense fallback={<Loading />}>
-        <ErrorBoundary>
-          <Dashboard />
-        </ErrorBoundary>
-      </Suspense>
-    ),
+    component: Dashboard,
   },
   {
     path: "/profile",
-    element: (
-      <Suspense fallback={<Loading />}>
-        <ErrorBoundary>
-          <ProfilePage />
-        </ErrorBoundary>
-      </Suspense>
-    ),
+    component: ProfilePage,
   },
   {
     path: "/auth",
-    element: (
-      <Suspense fallback={<Loading />}>
-        <ErrorBoundary>
-          <AuthLayout title="Welcome Back" subtitle="Sign in to your account">
-            <Outlet />
-          </AuthLayout>
-        </ErrorBoundary>
-      </Suspense>
-    ),
+    component: AuthLayout,
+    props: {
+      title: "Welcome Back",
+      subtitle: "Sign in to your account",
+    },
     children: [
       {
         path: "login",
-        element: (
-          <Suspense fallback={<Loading />}>
-            <LoginForm />
-          </Suspense>
-        ),
+        component: LoginForm,
       },
       {
         path: "register",
-        element: (
-          <Suspense fallback={<Loading />}>
-            <RegistrationForm />
-          </Suspense>
-        ),
+        component: RegistrationForm,
       },
     ],
   },
-]);
+];
+
+// Create router configuration
+export const router = createBrowserRouter(
+  routes.map((route) => ({
+    path: route.path,
+    element: (
+      <Suspense fallback={<Loading />}>
+        <ErrorBoundary>
+          <RouteComponent
+            component={route.component}
+            props={route.props}
+            hasChildren={Boolean(route.children)}
+          />
+        </ErrorBoundary>
+      </Suspense>
+    ),
+    children: route.children?.map((child) => ({
+      path: child.path,
+      element: (
+        <Suspense fallback={<Loading />}>
+          <RouteComponent component={child.component} props={child.props} />
+        </Suspense>
+      ),
+    })),
+  }))
+);
+
+// Export PreloadLink for use in navigation components
+export { PreloadLink };
