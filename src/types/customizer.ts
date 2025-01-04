@@ -1,0 +1,1 @@
+export type CustomizerTab = 'content' | 'layout' | 'api';
